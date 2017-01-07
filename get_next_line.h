@@ -6,7 +6,7 @@
 /*   By: fdeclerc <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/01/06 17:32:54 by fdeclerc          #+#    #+#             */
-/*   Updated: 2017/01/07 15:55:00 by fdeclerc         ###   ########.fr       */
+/*   Updated: 2017/01/07 16:40:46 by fdeclerc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@
 # include "libft/libft.h"
 
 # define BUFF_SIZE 32
-# define SIZE_FD 2147483647
+# define SIZE_M  2147483647
 
 int	get_next_line(int const fd, char **line);
 
