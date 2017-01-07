@@ -5,85 +5,73 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: fdeclerc <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2016/11/17 16:48:12 by fdeclerc          #+#    #+#             */
-/*   Updated: 2016/12/22 16:24:41 by fdeclerc         ###   ########.fr       */
+/*   Created: 2017/01/07 13:18:34 by fdeclerc          #+#    #+#             */
+/*   Updated: 2017/01/07 16:34:31 by fdeclerc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 
-static int		ft_check_line(int fd, char *buff, char *ch[1], char **line)
+static char		*ft_read_file(const int fd, char *str)
 {
 	int			rd;
-	char		*c;
+	char		buff[BUFF_SIZE + 1];
 	char		*tmp;
 
-	while (!(c = ft_strchr(*ch, '\n')) &&
-			(rd = read(fd, buff, BUFF_SIZE)) > 0)
+	rd = 0;
+	while (!(ft_strchr(str, '\n')) && (rd = read(fd, buff, BUFF_SIZE)) > 0)
 	{
 		buff[rd] = '\0';
-		tmp = *ch;
-		*ch = ft_strjoin(tmp, buff);
-		ft_strdel(&tmp);
+		tmp = str;
+		if (!(str = ft_strjoin(tmp, buff)))
+			return (NULL);
+		free(tmp);
 	}
-	ft_strdel(&buff);
 	if (rd == -1)
-		return (-1);
-	if (!c && rd == 0)
 	{
-		if (*ch[0] == '\0')
-			*line = ft_strdup("");
-		return (0);
+		free(str);
+		str = NULL;
+		return (NULL);
 	}
-	return (1);
+	return (str);
 }
 
-static char		**ft_new_line(int fd, char *ch[1])
+static int		ft_new_line(char *buff, char **line)
 {
-	static char *line[BUFF_SIZE + 1];
-
-	if (ch != NULL)
-		line[fd] = *ch;
-	*line = line[fd];
-	return (line);
-}
-
-static int		ft_end_line(char **ch, int fd, char **line)
-{
-	if (*ch[0] == '\0')
-	{
-		ft_new_line(fd, ch);
-		return (0);
-	}
-	*line = *ch;
-	ch[0] = NULL;
-	ft_new_line(fd, ch);
-	return (1);
-}
-
-int				get_next_line(int fd, char **line)
-{
-	char		**ch;
-	int			back;
-	char		*buff;
+	int			i;
 	char		*tmp;
 
-	if (fd < 0 || line == NULL || (buff = ft_strnew(BUFF_SIZE)) == NULL)
+	i = 0;
+	while (buff[i] != '\n' && buff[i] != '\0')
+		i++;
+	*line = ft_strsub(buff, 0, i);
+	tmp = ft_strnew(sizeof(tmp) * (ft_strlen(buff)));
+	if (tmp == NULL)
 		return (-1);
-	ch = ft_new_line(fd, NULL);
-	if (*ch == NULL)
-		*ch = ft_strnew(1);
-	if ((back = ft_check_line(fd, buff, ch, line)) == 0)
-		return (ft_end_line(ch, fd, line));
-	if (back == -1)
+	tmp = ft_strcpy(tmp, &buff[i + 1]);
+	ft_strclr(buff);
+	buff = ft_strcpy(buff, tmp);
+	free(tmp);
+	return (1);
+}
+
+int				get_next_line(const int fd, char **line)
+{
+	static char	*buff[SIZE_FD];
+
+	if (BUFF_SIZE <= 0 || fd < 0 || fd > 2147483647 || line == NULL
+			|| BUFF_SIZE >= 10000000)
+		return (-1);
+	if (!buff[fd] && (buff[fd] = ft_strnew(sizeof(buff[fd]) * 2)) == NULL)
+		return (-1);
+	if ((buff[fd] = ft_read_file(fd, buff[fd])) == NULL)
+		return (-1);
+	if (buff[fd][0] == '\0')
 	{
-		ft_new_line(fd, ch);
-		return (-1);
+		*line = NULL;
+		return (0);
 	}
-	*line = ft_strsub(*ch, 0, (ft_strchr(*ch, '\n') - *ch));
-	tmp = *ch;
-	*ch = ft_strdup(ft_strchr(tmp, '\n') + 1);
-	ft_strdel(&tmp);
-	ft_new_line(fd, ch);
+	if (ft_new_line(buff[fd], line) < 0)
+		return (-1);
 	return (1);
 }
